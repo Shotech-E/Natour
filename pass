@@ -1,0 +1,9 @@
+showars
+cdpWHmyE9FbmumJF
+
+mongodb+srv://showars:cdpWHmyE9FbmumJF@cluster0.esjehex.mongodb.net/
+
+mongodb+srv://showars:cdpWHmyE9FbmumJF@cluster0.esjehex.mongodb.net/
+
+mongosh "mongodb+srv://cluster0.esjehex.mongodb.net/" --apiVersion 1 --username showars --password cdpWHmyE9FbmumJF
+
