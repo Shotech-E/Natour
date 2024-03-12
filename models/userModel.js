@@ -39,8 +39,8 @@ const userSchema = new Schema({
 			validator: function (el) {
 				return el === this.password;
 			},
-			message: 'Passwords are not the same!',
-		},
+			message: 'Passwords are not the same!'
+		}
 	},
 	passwordChangeAt: Date,
 	passwordResetToken: String,
@@ -86,7 +86,7 @@ userSchema.methods.createPasswordResetToken = function () {
         .update(resetToken)
         .digest('hex');
 
-	console.log({resetToken}, {passwordResetToken})
+	console.log({resetToken}, this.passwordResetToken)
     this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
 
     return resetToken;

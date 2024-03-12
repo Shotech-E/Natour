@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('./../models/userModel');
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
+const sendEmail = require('./../utils/email');
 
 const signToken = (id) => {
 	return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -89,10 +90,10 @@ exports.protect = catchAsync(async (req, res, next) => {
 exports.restrictTo = (...roles) => {
 	return (req, res, next) => {
 		if (!roles.includes(req.user.role)) {
-			return next(new AppError('You are not authorized to access this route', 403));
-		} else {
-			next();
+			return next(
+				new AppError('You are not authorized to access this route', 403));
 		}
+		next();
 	};
 };
 
@@ -105,13 +106,10 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
 	//Generate the random reset token
 	const resetToken = user.createPassowrdResetToken;
-	await user.save({validateBeforeSave: false});
+	await user.save();
 });
 
-
-
-
 //Send it to user's email address
-
+const resetURL
 
 exports.resetPassword = (req, res, next) => { };
