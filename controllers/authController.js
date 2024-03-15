@@ -11,18 +11,23 @@ const signToken = (id) => {
 		expiresIn: process.env.JWT_EXPIRES_IN,
 	});
 };
-exports.signup = catchAsync(async (req, res, next) => {
-	const newUser = await User.create(req.body);
 
-	const token = signToken(newUser._id);
+const createSendToken = (user, statusCode, res) => {
+	const token = signToken(user._id);
 
-	res.status(201).json({
+	res.status(statusCode).json({
 		status: 'success',
 		token,
 		data: {
-			user: newUser,
+			user
 		},
 	});
+
+}
+
+exports.signup = catchAsync(async (req, res, next) => {
+	const newUser = await User.create(req.body);
+	createSendToken(newUser, 201, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -45,11 +50,7 @@ exports.login = catchAsync(async (req, res, next) => {
 	}
 
 	// check if everything is ok and send token to client
-	const token = signToken(user._id);
-	res.status(200).json({
-		status: 'success',
-		token,
-	});
+	createSendToken(user, 200, res);
 });
 
 exports.protect = catchAsync(async (req, res, next) => {
@@ -72,15 +73,25 @@ exports.protect = catchAsync(async (req, res, next) => {
 	//verification of token
 	const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
-	//check if the user exits ////////////////////////////////////////////////////////
-	const currentUser = User.findById(decoded.id);//////////////////////
+	//check if the user exits 
+	const currentUser = User.findById(decoded.id);
 	if (!currentUser) {
-		return next(new AppError('The user belong to this token was not found', 401));
+		return next(
+			new AppError(
+				'The user belong to this token was not found',
+				401
+			)
+		);
 	}
 
 	//check if user changed password after the token was issued
-	if(currentUser.changedpasswordAfter(decoded.id)){
-		return next(new AppError('User recently changed password! Please login again', 401));
+	if(currentUser.changedpasswordAfter(decoded.id)){///////
+		return next(
+			new AppError(
+				'User recently changed password! Please login again',
+				401
+			)
+		);
 	}
 
 	// GRNAT ACCESS TO PROTECTED ROUTE
@@ -160,11 +171,23 @@ exports.resetPassword = catchAsync(async(req, res, next)=> {
 
 
 	// log the user in, and send JWT token
-	const token = signToken(user._id)
+	createSendToken(user, 200, res);
+});
 
-	res.status(200).json({
-		status:'success',
-        token
-	});
+exports.updatePassword = catchAsync(async(req, res, next) => { 
+	// Get user from collection
+	const user = await User.findById(req.user.id).select('password');
 
+	// check if posted current password is correct
+	if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
+		return next(new AppError('Your current password is wrong.', 401));
+	}
+
+	// if so, update password
+	user.password = req.body.password;
+	user.passwordConfirm = req.body.passwordConfirm;
+	await user.save();
+
+	// log the user in, send JWT
+	createSendToken(user, 200, res);
 });
