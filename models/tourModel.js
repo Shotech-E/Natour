@@ -5,7 +5,7 @@ const slugify = require('slugify');
 const tourSchema = new mongoose.Schema({
     name: {
         type: String,
-        require: [true, 'A tour must have a name'],
+        required: [true, 'A tour must have a name'],
         unique: true,
         trim: true,
         maxLength: [40, 'A tour name must have less or equal than 40 characters'],
@@ -40,13 +40,14 @@ const tourSchema = new mongoose.Schema({
     },
     price:{
         type: Number,
-        require: [true, 'A tour must have a price']
+        required: [true, 'A tour must have a price']
     },
+    
     priceDiscount: {
         type: Number,
-        validator: {
-            validator: function(val){
-                // this only points to current doc on NEW document creation
+        validate: {
+            validator: function(val) {
+                // this only points to the current document on NEW document creation
                 return val < this.price;
             },
             message: 'Discount price ({VALUE}) should be below regular price'
@@ -57,14 +58,14 @@ const tourSchema = new mongoose.Schema({
         type: String,
         trim: true,
     },
-    discription: {
+    description: {
         type: String,
         trim: true,
-        require: [true, 'A tour must have a discription']
+        required: [true, 'A tour must have a discription']
     },
     imageCover: {
         type: String,
-        require: [true, 'A tour must have a cover image']
+        required: [true, 'A tour must have a cover image']
     },
     images: [String],
     createdAt: {
@@ -76,7 +77,38 @@ const tourSchema = new mongoose.Schema({
     secretTour: {
         type: Boolean,
         default: false
-    }
+    },
+    startLocation:{
+        // GeoJSON
+        type:{
+            type: String,
+            default: 'Point',
+            enum:['Point']
+        },
+        coordinates:[Number],
+        address: String,
+        description: String
+    },
+    locations:[
+        {
+            type:{
+                type: String,
+                default: 'Point',
+                enum:['Point']
+            },
+            coordinates:[Number],
+            address: String,
+            description: String,
+            day: Number
+        }
+    ],
+    guides:[
+        {
+            type: mongoose.Schema.ObjectId,
+            ref: 'User',
+            required: [true, 'A tour must have at least one guide']
+        }
+    ]
 }, 
     {
         toJSON: {virtuals: true},
@@ -88,11 +120,17 @@ tourSchema.virtual('durationweeks').get(function(){
     return this.duration / 7;
 });
 
-// DOCUMENTMIDDLEWARE: Run before .save() and .create()
+// DOCUMENT MIDDLEWARE: Run before .save() and .create()
 tourSchema.pre('save', function(next){
     this.slug = slugify(this.name, {lower: true});
     next();
 });
+
+// tourSchema.pre('save', async function(next){
+//     const guidesPromises = this.guides.map(async id => await User.findById(id));
+//     this.guides = await promises.all(guidesPromises);
+//     next();
+// });
 
 // tourSchema.pre('save', function(next){
 //     console.log('will save document...');
@@ -111,10 +149,18 @@ tourSchema.pre('find', function(next){
 
     this.start = Date.now();
     next();
+});
+
+tourSchema.pre('find', function(next){
+    this.populate({
+        path: 'guides',
+        select: '-__v -passwordChangeAt'
+    });
+    next();
 })
 
 tourSchema.post(/^find/, function(docs, next){
-    console.log('Query took ${Date.now() - this.start} milliseconds');
+    console.log(`Query took ${Date.now() - this.start} milliseconds`);
     // console.log(docs);
     next();
 });
