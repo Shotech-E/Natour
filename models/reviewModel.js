@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
+const Tour = require('./../models/tourModel');
 
 const reviewSchema = new mongoose.Schema({
-    reiew: {
+    review: {
         type: String,
         required: [true, 'Review cannot be empty']
     },
@@ -30,28 +31,71 @@ const reviewSchema = new mongoose.Schema({
     }
 },
 
-{
-    toJSON: {virtuals: true},
-    toObject: {virtuals: true}
-}
+    {
+        toJSON: {virtuals: true},
+        toObject: {virtuals: true}
+    }
 );
 
-reviewSchema.pre(/^find/, function(next){
-    // this.populate({
-    //     path: 'tour',
-    //     select: 'name'
-    // }).populate({
-    //     path: 'user',
-    //     select: 'name photo'
-    // });
+// To avoid duplicates on review that you have already commented
+reviewSchema.index({ tour: 1, user: 1}, {unique: true});
 
+reviewSchema.pre(/^find/, function(next){
     this.populate({
         path: 'user',
         select: 'name photo'
     });
 
     next();
-})
+});
+
+reviewSchema.statics.calcAverageRatings = async function(tourId){
+    const stats = await this.aggregate([
+        {
+            $match: {tour: tourId},
+        },
+        {
+            $group:{
+                _id: '$tour',
+                nRating:{$sum: 1},
+                avgRating: {$avg: '$rating'}
+            }
+        }
+    ]);
+
+    // console.log(stats);
+
+    if(stats.length > 0) {
+        await Tour.findByIdAndUpdate(tourId, {
+        ratingsQuality: stats[0].nRating,
+        ratingsAverage: stats[0].avgRating
+    });
+    } else{
+        await Tour.findByIdAndUpdate(tourId, {
+            ratingsQuality: 0,
+            ratingsAverage: 4.5
+        });
+    }
+
+    
+};
+
+reviewSchema.post('save', function(next){
+    // This points to current review
+    this.constructor.calcAverageRatings(this.tour);
+    next();
+});
+
+reviewSchema.pre(/^findOneAnd/, async function(next){
+    this.r = await this.findOne();
+    // console.log(this.r);
+    next();
+});
+
+reviewSchema.post(/^findOneAnd/, async function(){
+    // await this.findOne(); does not work here, query has already executed
+    await this.r.constructor.calcAverageRatings(this.r.tour);
+});
 
 const Review = mongoose.model('Review', reviewSchema);
 

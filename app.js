@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
@@ -14,9 +15,14 @@ const reviewRouter = require('./routes/reviewRoutes');
 
 const app = express();
 
-// gLOBAL Middleware
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
 
-//Set Scurity HTTP header
+// gLOBAL Middleware
+// Serving static files
+app.use(express.static(path.join(__dirname, 'public')));
+
+//Set Security HTTP header
 app.use(helmet());
 
 if(process.env.NODE_ENV === 'development'){
@@ -52,8 +58,6 @@ app.use(
     })
 );
 
-//Serving static files
-app.use(express.static(`${__dirname}/public`));
 
 // app.use((req, res, next) =>  {
 //     console.log('Loading...');

@@ -33,7 +33,7 @@ const userSchema = new Schema({
 	},
 	passwordConfirm: {
 		type: String,
-		required: [true, 'Please confirm your password'],
+		// required: [true, 'Please confirm your password'],
 		validate: {
 			//THIS ONLY WORKS ON CREATE OR SAVE!!!
 			validator: function (el) {
@@ -73,15 +73,15 @@ userSchema.pre('save', function (next) {
 
 userSchema.pre(/^find/, function (next) {
 	// this points to the current query
-	this.find({ active: {$ne: flase} });
+	this.find({ active: {$ne: false} });
 	next();
 });
 
 userSchema.methods.correctPassword = async function (
 	candidatePassword,
-	userPassord
+	userPassword
 ) {
-	return await bcrypt.compare(candidatePassword, userPassord);
+	return await bcrypt.compare(candidatePassword, userPassword);
 };
 
 userSchema.methods.changePasswordAfter = function (JWTTimestamp) {
