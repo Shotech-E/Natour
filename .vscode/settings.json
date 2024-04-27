@@ -1,4 +1,7 @@
 {
 	"terminal.integrated.tabs.defaultColor": "terminal.ansiBlue",
-	"editor.defaultFormatter": "formulahendry.auto-close-tag"
+	"editor.defaultFormatter": "formulahendry.auto-close-tag",
+	"[pug]": {
+		"editor.defaultFormatter": "alexbabichev.formatter-pug"
+	}
 }
