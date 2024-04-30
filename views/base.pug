@@ -1,12 +1,13 @@
 doctype html
 html
   head
-    meta(charset='UTF-8')
-    meta(name='viewport', content='width=device-width,initial-scale=1')
-    link(href='https://fonts.googleapis.com/css?family=Lato:300,300i,700', rel='stylesheet')
-    link(rel='stylesheet', href='/css/style.css')
-    link(rel='shortcut icon', type='image/png', href='img/favicon.png')
-    title Natours | #{title}
+    block head
+        meta(charset='UTF-8')
+        meta(name='viewport', content='width=device-width,initial-scale=1')
+        link(href='https://fonts.googleapis.com/css?family=Lato:300,300i,700', rel='stylesheet')
+        link(rel='stylesheet', href='/css/style.css')
+        link(rel='shortcut icon', type='image/png', href='img/favicon.png')
+        title Natours | #{title}
 
   body
     //- HEADER
@@ -19,3 +20,8 @@ html
 
     //- FOOTER
     include _footer
+
+    //- MAPBOX JS 
+    <script src='https://unpkg.com/axios/dist/axios.min.js'></script>
+    script(src='/js/mapbox.js')
+    script(src='/js/login.js')

@@ -70,15 +70,14 @@ exports.protect = catchAsync(async (req, res, next) => {
 	let token;
 	if (req.headers.Authorization && req.headers.Authorization.startWith('Bearer')) {
 		token = req.headers.Authorization.split(' ')[1];
+	} else if (req.cookies.jwt) {
+		token = req.cookies.jwt;
 	}
-	console.log(token);
 
 	if (!token) {
 		return next(
 			new AppError(
-				'You are not authorized to access this route. Please logged in first.',
-				401
-			)
+				'You are not authorized to access this route. Please logged in first.', 401)
 		);
 	}
 
